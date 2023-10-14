@@ -1,0 +1,91 @@
+- hosts: all
+  tasks:
+
+  - name: Install EPEL repo
+    shell: yum install epel-release -y
+
+  - name: Clean yum cache
+    shell: yum clean all
+
+  - name: Stop nginx
+    systemd:
+      name: nginx
+      state: stopped
+    ignore_errors: yes
+
+  - name: Remove nginx
+    yum:
+      name: nginx
+      state: absent
+
+  - name: Installing apache webserver
+    yum:
+      name: httpd
+      state: latest
+
+  - name: Installing NFS Utils
+    yum:
+      name: nfs-utils
+      state: latest
+  
+  - name: starting nfs 
+    service:
+      name: NFS
+      state: start
+      
+
+  - name: enable nfs
+    service:
+      name: nfs
+      state: enable
+      
+      
+  - name: Create a NFS directory
+    ansible.builtin.file:
+      path: /var/nfs-exports/webserver
+      state: directory
+      mode: '0755'
+      
+  - name: Config html file
+    shell: echo  " hello welcome " > /var/nfs-exports/webserver/index.html 
+      
+  - name: giving nfs location in server side
+    shell: echo " /var/nfs-exports/webserver  *(rw,sync,no_root_squash) " >> /etc/exports
+     
+      
+    
+  - name : mount on client side
+    shell: echo " 192.168.0.108:/var/nfs-exports/webserver /var/www/html nfs defaults 0 0 " > /etc/fstab
+    
+  - name: mounting
+    shell: mount /var/www/html
+  
+   - name: installing ssl packages
+    yum:
+      name: "{{ item }}"
+      state: latest
+    loop:
+       - mod_ssl
+       - openssl
+       
+  - name: Create a ssl directory
+    ansible.builtin.file:
+      path: /etc/httpd/ssl
+      state: directory
+      mode: '0755'
+
+  - name: Generate a Self Signed OpenSSL certificate
+    shell: sudo openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout /etc/httpd/ssl/httpd.key -out /etc/httpd/ssl/httpd.crt -subj "/C=IN/ST=MH/L=MH/O=TEST/OU=TEST/CN=test.com"
+
+  - name: Config html file
+    shell: echo  " make with ansible " > /var/www/html
+
+  - name: Starting apache service
+    service:
+      name: httpd
+      state: started
+
+  - name: Stop firewall
+    service:
+      name: firewalld.service
+      state: stopped #i want use systemctl stop firewalld
