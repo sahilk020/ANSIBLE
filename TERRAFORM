@@ -1,0 +1,6 @@
+1.  terraform plan ( used to run normal program in terraform ) ex: to print hello world
+2.  teraform apply ( to automate the cloud ) ex: automate github aur any cloud (but frist use terraform plan command)
+3.  terraform destroy ( to delete the file that is created using terraform)
+4.  terraform refresh ( to refresh the cloud update if there is any change )
+
+5. terraform destroy --target (name of the cloud platform ).(filename) ex. github_repository.terraform-second-repo
